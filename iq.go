@@ -1,11 +1,9 @@
-package xmpp // import "gosrc.io/xmpp"
+package xmpp
 
 import (
 	"encoding/xml"
 	"reflect"
 	"strconv"
-
-	"gosrc.io/xmpp/iot"
 )
 
 /*
@@ -339,5 +337,4 @@ func init() {
 	typeRegistry["http://jabber.org/protocol/disco#info query"] = reflect.TypeOf(DiscoInfo{})
 	typeRegistry["http://jabber.org/protocol/disco#items query"] = reflect.TypeOf(DiscoItems{})
 	typeRegistry["urn:ietf:params:xml:ns:xmpp-bind bind"] = reflect.TypeOf(BindBind{})
-	typeRegistry["urn:xmpp:iot:control set"] = reflect.TypeOf(iot.ControlSet{})
 }

@@ -1,5 +1,5 @@
 /*
-Fluux XMPP is a Go XMPP library, focusing on simplicity, simple automation, and IoT.
+go-xmpp is a Go XMPP library, focusing on simplicity, simple automation.
 
 The goal is to make simple to write simple adhoc XMPP clients:
 
@@ -7,11 +7,11 @@ The goal is to make simple to write simple adhoc XMPP clients:
  - For building connected "things" by plugging them on an XMPP server,
  - For writing simple chatbots to control a service or a thing.
 
-Fluux XMPP can be used to build XMPP clients or XMPP components.
+go-xmpp can be used to build XMPP clients or XMPP components.
 
 Clients
 
-Fluux XMPP can be use to create fully interactive XMPP clients (for
+go-xmpp can be use to create fully interactive XMPP clients (for
 example console-based), but it is more commonly used to build automated
 clients (connected devices, automation scripts, chatbots, etc.).
 
@@ -25,8 +25,8 @@ Component protocol is defined in XEP-114 (https://xmpp.org/extensions/xep-0114.h
 
 Compliance
 
-Fluux XMPP has been primarily tested with ejabberd (https://www.ejabberd.im)
+go-xmpp has been primarily tested with ejabberd (https://www.ejabberd.im)
 but it should work with any XMPP compliant server.
 
 */
-package xmpp // import "gosrc.io/xmpp"
+package xmpp
