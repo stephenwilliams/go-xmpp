@@ -85,7 +85,7 @@ func (c *Component) Send(packet Packet) error {
 		return errors.New("cannot marshal packet " + err.Error())
 	}
 
-	if _, err := fmt.Fprintf(c.conn, string(data)); err != nil {
+	if _, err := fmt.Fprint(c.conn, string(data)); err != nil {
 		return errors.New("cannot send packet " + err.Error())
 	}
 	return nil
@@ -96,8 +96,8 @@ func (c *Component) Send(packet Packet) error {
 // disconnect the component. It is up to the user of this method to
 // carefully craft the XML content to produce valid XMPP.
 func (c *Component) SendRaw(packet string) error {
-	fmt.Fprintf(c.conn, packet) // TODO handle errors
-	return nil
+	_, err := fmt.Fprint(c.conn, packet)
+	return err
 }
 
 // handshake generates an authentication token based on StreamID and shared secret.

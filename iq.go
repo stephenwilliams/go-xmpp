@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"reflect"
 	"strconv"
+	"sync"
 )
 
 /*
@@ -208,7 +209,7 @@ func (iq *IQ) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 			if level <= 1 {
 				var elt interface{}
 				payloadType := tt.Name.Space + " " + tt.Name.Local
-				if payloadType := typeRegistry[payloadType]; payloadType != nil {
+				if payloadType := GetIQPayloadType(payloadType); payloadType != nil {
 					val := reflect.New(payloadType)
 					elt = val.Interface()
 				} else {
@@ -332,6 +333,19 @@ type DiscoItem struct {
 // ============================================================================
 
 var typeRegistry = make(map[string]reflect.Type)
+var typeRegistryLock sync.RWMutex
+
+func AddIQPayloadType(xmlName string, p IQPayload) {
+	typeRegistryLock.Lock()
+	defer typeRegistryLock.Unlock()
+	typeRegistry[xmlName] = reflect.TypeOf(p)
+}
+
+func GetIQPayloadType(xmlName string) reflect.Type {
+	typeRegistryLock.RLock()
+	defer typeRegistryLock.RUnlock()
+	return typeRegistry[xmlName]
+}
 
 func init() {
 	typeRegistry["http://jabber.org/protocol/disco#info query"] = reflect.TypeOf(DiscoInfo{})
