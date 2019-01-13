@@ -1,6 +1,6 @@
 # Go XMPP
 
-[[![GoDoc](https://godoc.org/github.com/stephenwilliams/go-xmpp?status.svg)](https://godoc.org/github.com/stephenwilliams/go-xmpp)
+[![GoDoc](https://godoc.org/github.com/stephenwilliams/go-xmpp?status.svg)](https://godoc.org/github.com/stephenwilliams/go-xmpp)
 
 go-xmpp is a Go XMPP library, focusing on simplicity.
 
