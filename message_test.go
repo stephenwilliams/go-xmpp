@@ -11,6 +11,7 @@ func TestGenerateMessage(t *testing.T) {
 	message := NewMessage("chat", "admin@localhost", "test@localhost", "1", "en")
 	message.Body = "Hi"
 	message.Subject = "Msg Subject"
+	message.ChatState = "composing"
 
 	data, err := xml.Marshal(message)
 	if err != nil {
