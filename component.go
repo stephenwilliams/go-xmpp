@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/xml"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"time"
@@ -19,6 +18,7 @@ const componentStreamOpen = "<?xml version='1.0'?><stream:stream to='%s' xmlns='
 type Component struct {
 	Host   string
 	Secret string
+	Config *Config
 
 	// TCP level connection
 	conn net.Conn
@@ -39,7 +39,7 @@ func (c *Component) Connect(connStr string) error {
 	c.conn = conn
 
 	// 1. Send stream open tag
-	if _, err := fmt.Fprintf(conn, componentStreamOpen, c.Host, NSComponent, NSStream); err != nil {
+	if _, err := printf(c.Config, conn, componentStreamOpen, c.Host, NSComponent, NSStream); err != nil {
 		return errors.New("cannot send stream open " + err.Error())
 	}
 	c.decoder = xml.NewDecoder(conn)
@@ -51,7 +51,7 @@ func (c *Component) Connect(connStr string) error {
 	}
 
 	// 3. Authentication
-	if _, err := fmt.Fprintf(conn, "<handshake>%s</handshake>", c.handshake(streamId)); err != nil {
+	if _, err := printf(c.Config, conn, "<handshake>%s</handshake>", c.handshake(streamId)); err != nil {
 		return errors.New("cannot send handshake " + err.Error())
 	}
 
@@ -85,7 +85,7 @@ func (c *Component) Send(packet Packet) error {
 		return errors.New("cannot marshal packet " + err.Error())
 	}
 
-	if _, err := fmt.Fprint(c.conn, string(data)); err != nil {
+	if _, err := printf(c.Config, c.conn, string(data)); err != nil {
 		return errors.New("cannot send packet " + err.Error())
 	}
 	return nil
@@ -96,7 +96,7 @@ func (c *Component) Send(packet Packet) error {
 // disconnect the component. It is up to the user of this method to
 // carefully craft the XML content to produce valid XMPP.
 func (c *Component) SendRaw(packet string) error {
-	_, err := fmt.Fprint(c.conn, packet)
+	_, err := printf(c.Config, c.conn, packet)
 	return err
 }
 

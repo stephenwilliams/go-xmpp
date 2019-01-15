@@ -27,17 +27,22 @@ type Session struct {
 	socketProxy io.ReadWriter
 	decoder     *xml.Decoder
 
+	// Config
+	config *Config
+
 	// error management
 	err error
 }
 
 func NewSession(conn net.Conn, o Config) (net.Conn, *Session, error) {
-	s := new(Session)
+	s := &Session{
+		config: &o,
+	}
 	s.init(conn, o)
 
 	// starttls
 	var tlsConn net.Conn
-	tlsConn = s.startTlsIfSupported(conn, o.parsedJid.domain)
+	tlsConn = s.startTlsIfSupported(conn, o.parsedJid.Domain)
 	if s.TlsEnabled {
 		s.reset(conn, tlsConn, o)
 	}
@@ -50,7 +55,7 @@ func NewSession(conn net.Conn, o Config) (net.Conn, *Session, error) {
 	s.auth(o)
 	s.reset(tlsConn, tlsConn, o)
 
-	// bind resource and 'start' XMPP session
+	// bind Resource and 'start' XMPP session
 	s.bind(o)
 	s.rfc3921Session(o)
 
@@ -63,8 +68,7 @@ func (s *Session) PacketId() string {
 }
 
 func (s *Session) init(conn net.Conn, o Config) {
-	s.setProxy(nil, conn, o)
-	s.Features = s.open(o.parsedJid.domain)
+	s.Features = s.open(o.parsedJid.Domain)
 }
 
 func (s *Session) reset(conn net.Conn, newConn net.Conn, o Config) {
@@ -72,21 +76,12 @@ func (s *Session) reset(conn net.Conn, newConn net.Conn, o Config) {
 		return
 	}
 
-	s.setProxy(conn, newConn, o)
-	s.Features = s.open(o.parsedJid.domain)
-}
-
-// TODO: setProxyLogger ? better name ? This is not a TCP / HTTP proxy
-func (s *Session) setProxy(conn net.Conn, newConn net.Conn, o Config) {
-	if newConn != conn {
-		s.socketProxy = newSocketProxy(newConn, o.PacketLogger)
-	}
-	s.decoder = xml.NewDecoder(s.socketProxy)
+	s.Features = s.open(o.parsedJid.Domain)
 }
 
 func (s *Session) open(domain string) (f streamFeatures) {
 	// Send stream open tag
-	if _, s.err = fmt.Fprintf(s.socketProxy, xmppStreamOpen, domain, NSClient, NSStream); s.err != nil {
+	if _, s.err = printf(s.config, s.socketProxy, xmppStreamOpen, domain, NSClient, NSStream); s.err != nil {
 		return
 	}
 
@@ -109,7 +104,7 @@ func (s *Session) startTlsIfSupported(conn net.Conn, domain string) net.Conn {
 	}
 
 	if s.Features.StartTLS.XMLName.Space+" "+s.Features.StartTLS.XMLName.Local == nsTLS+" starttls" {
-		fmt.Fprintf(s.socketProxy, "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>")
+		printf(s.config, s.socketProxy, "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>")
 
 		var k tlsProceed
 		if s.err = s.decoder.DecodeElement(&k, nil); s.err != nil {
@@ -140,7 +135,7 @@ func (s *Session) auth(o Config) {
 		return
 	}
 
-	s.err = authSASL(s.socketProxy, s.decoder, s.Features, o.parsedJid.username, o.Password)
+	s.err = authSASL(s.socketProxy, s.decoder, s.Features, o.parsedJid.Username, o.Password)
 }
 
 func (s *Session) bind(o Config) {
@@ -149,12 +144,12 @@ func (s *Session) bind(o Config) {
 	}
 
 	// Send IQ message asking to bind to the local user name.
-	var resource = o.parsedJid.resource
+	var resource = o.parsedJid.Resource
 	if resource != "" {
-		fmt.Fprintf(s.socketProxy, "<iq type='set' id='%s'><bind xmlns='%s'><resource>%s</resource></bind></iq>",
+		printf(s.config, s.socketProxy, "<iq type='set' id='%s'><bind xmlns='%s'><Resource>%s</Resource></bind></iq>",
 			s.PacketId(), nsBind, resource)
 	} else {
-		fmt.Fprintf(s.socketProxy, "<iq type='set' id='%s'><bind xmlns='%s'/></iq>", s.PacketId(), nsBind)
+		printf(s.config, s.socketProxy, "<iq type='set' id='%s'><bind xmlns='%s'/></iq>", s.PacketId(), nsBind)
 	}
 
 	var iq IQ
@@ -166,7 +161,7 @@ func (s *Session) bind(o Config) {
 	// TODO Check all elements
 	switch payload := iq.Payload[0].(type) {
 	case *BindBind:
-		s.BindJid = payload.Jid // our local id (with possibly randomly generated resource
+		s.BindJid = payload.Jid // our local id (with possibly randomly generated Resource
 	default:
 		s.err = errors.New("iq bind result missing")
 	}
@@ -183,7 +178,7 @@ func (s *Session) rfc3921Session(o Config) {
 
 	var iq IQ
 	if s.Features.Session.optional.Local != "" {
-		fmt.Fprintf(s.socketProxy, "<iq type='set' id='%s'><session xmlns='%s'/></iq>", s.PacketId(), nsSession)
+		printf(s.config, s.socketProxy, "<iq type='set' id='%s'><session xmlns='%s'/></iq>", s.PacketId(), nsSession)
 		if s.err = s.decoder.Decode(&iq); s.err != nil {
 			s.err = errors.New("expecting iq result after session open: " + s.err.Error())
 			return

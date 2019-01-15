@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"errors"
-	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -68,7 +67,7 @@ Setting up the client / Checking the parameters
 // Default the port to 5222.
 // TODO: better config checks
 func NewClient(config Config) (c *Client, err error) {
-	// TODO: If option address is nil, use the Jid domain to compose the address
+	// TODO: If option address is nil, use the Jid Domain to compose the address
 	if config.Address, err = checkAddress(config.Address); err != nil {
 		return
 	}
@@ -137,11 +136,6 @@ func (c *Client) Connect() (*Session, error) {
 	}
 
 	c.Metrics.setLoginTime()
-	// We're connected and can now receive and send messages.
-	//fmt.Fprintf(client.conn, "<presence xml:lang='en'><show>%s</show><status>%s</status></presence>", "chat", "Online")
-	// TODO: Do we always want to send initial presence automatically ?
-	// Do we need an option to avoid that or do we rely on client to send the presence itself ?
-	fmt.Fprintf(c.Session.socketProxy, "<presence/>")
 
 	return c.Session, err
 }
@@ -152,6 +146,12 @@ func (c *Client) recv(receiver chan<- interface{}) (err error) {
 		if err != nil {
 			return err
 		}
+
+		if c.config.PacketLogger != nil {
+			d, _ := xml.Marshal(val)
+			c.config.PacketLogger.LogReceive(string(d))
+		}
+
 		receiver <- val
 		val = nil
 	}
@@ -173,7 +173,7 @@ func (c *Client) Send(packet Packet) error {
 		return errors.New("cannot marshal packet " + err.Error())
 	}
 
-	if _, err := fmt.Fprintf(c.conn, string(data)); err != nil {
+	if _, err := printf(&c.config, c.conn, string(data)); err != nil {
 		return errors.New("cannot send packet " + err.Error())
 	}
 	return nil
@@ -184,8 +184,8 @@ func (c *Client) Send(packet Packet) error {
 // disconnect the client. It is up to the user of this method to
 // carefully craft the XML content to produce valid XMPP.
 func (c *Client) SendRaw(packet string) error {
-	fmt.Fprintf(c.Session.socketProxy, packet) // TODO handle errors
-	return nil
+	_, err := printf(&c.config, c.Session.socketProxy, packet)
+	return err
 }
 
 func xmlEscape(s string) string {

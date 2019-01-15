@@ -1,13 +1,16 @@
 package xmpp
 
-import "os"
+type Logger interface {
+	LogSend(r string)
+	LogReceive(r string)
+}
 
 type Config struct {
 	Address        string
 	Jid            string
 	parsedJid      *Jid // For easier manipulation
 	Password       string
-	PacketLogger   *os.File // Used for debugging
+	PacketLogger   Logger // Used for debugging
 	Lang           string   // TODO: should default to 'en'
 	Retry          int      // Number of retries for connect
 	ConnectTimeout int      // Connection timeout in seconds. Default to 15
