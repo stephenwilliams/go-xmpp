@@ -8,11 +8,11 @@ import (
 type ChatState string
 
 const (
-	ChatStateActive ChatState = "active"
+	ChatStateActive    ChatState = "active"
 	ChatStateComposing ChatState = "composing"
-	ChatStatePaused ChatState = "paused"
-	ChatStateInactive ChatState = "inactive"
-	ChatStateGone ChatState = "gone"
+	ChatStatePaused    ChatState = "paused"
+	ChatStateInactive  ChatState = "inactive"
+	ChatStateGone      ChatState = "gone"
 )
 
 // ============================================================================
@@ -21,11 +21,12 @@ const (
 type Message struct {
 	XMLName xml.Name `xml:"message"`
 	PacketAttrs
-	Subject   string `xml:"subject,omitempty"`
-	Body      string `xml:"body,omitempty"`
-	Thread    string `xml:"thread,omitempty"`
-	Error     Err    `xml:"error,omitempty"`
+	Subject   string    `xml:"subject,omitempty"`
+	Body      string    `xml:"body,omitempty"`
+	Thread    string    `xml:"thread,omitempty"`
+	Error     Err       `xml:"error,omitempty"`
 	ChatState ChatState `xml:",omitempty"`
+	AMP       *AMP      `xml:",omitempty"`
 }
 
 func (Message) Name() string {
@@ -122,6 +123,7 @@ func (m *Message) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 				if err != nil {
 					return err
 				}
+				m.Error = *e
 			}
 		case xml.CharData:
 			s := string([]byte(t))
