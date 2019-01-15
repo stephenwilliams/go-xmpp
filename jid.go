@@ -2,13 +2,14 @@ package xmpp
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
 type Jid struct {
-	username string
-	domain   string
-	resource string
+	Username string
+	Domain   string
+	Resource string
 }
 
 func NewJid(sjid string) (jid *Jid, err error) {
@@ -18,17 +19,21 @@ func NewJid(sjid string) (jid *Jid, err error) {
 		return
 	}
 	jid = new(Jid)
-	jid.username = s1[0]
+	jid.Username = s1[0]
 
 	s2 := strings.Split(s1[1], "/")
 	if len(s2) > 2 {
 		err = errors.New("invalid JID: " + sjid)
 		return
 	}
-	jid.domain = s2[0]
+	jid.Domain = s2[0]
 	if len(s2) == 2 {
-		jid.resource = s2[1]
+		jid.Resource = s2[1]
 	}
 
 	return
+}
+
+func (j Jid) String() string {
+	return fmt.Sprintf("%v@%v/%v", j.Username, j.Domain, j.Resource)
 }
