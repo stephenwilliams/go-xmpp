@@ -113,6 +113,18 @@ type BindBind struct {
 func (*BindBind) IsIQPayload() {
 }
 
+type IQXMPPSession struct {
+	XMLName xml.Name `xml:"urn:ietf:params:xml:ns:xmpp-session session"`
+}
+
+func (IQXMPPSession) IsIQPayload() {}
+
+type Ping struct {
+	XMLName xml.Name `xml:"urn:xmpp:ping ping"`
+}
+
+func (Ping) IsIQPayload() {}
+
 // Session is obsolete in RFC 6121.
 // Added for compliance with RFC 3121.
 // Remove when ejabberd purely conforms to RFC 6121.
