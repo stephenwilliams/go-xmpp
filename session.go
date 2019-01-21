@@ -24,7 +24,7 @@ type Session struct {
 	Out chan interface{}
 
 	// read / write
-	socketProxy io.ReadWriter
+	socketProxy io.ReadWriter // TODO Rename
 	decoder     *xml.Decoder
 
 	// Config
@@ -68,6 +68,7 @@ func (s *Session) PacketId() string {
 }
 
 func (s *Session) init(conn net.Conn, o Config) {
+	s.socketProxy = conn
 	s.Features = s.open(o.parsedJid.Domain)
 }
 
